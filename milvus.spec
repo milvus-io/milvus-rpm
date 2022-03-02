@@ -23,7 +23,7 @@ BuildRequires:    systemd-rpm-macros
 BuildRequires:    zlib-devel git python3-devel make automake gcc gcc-c++ gcc-gfortran
 BuildRequires:    cmake >= 3.18 golang >= 1.15 tbb-devel openblas-devel boost-devel
 ExclusiveArch:    x86_64
-Source0:          https://github.com/milvus-io/milvus/archive/refs/tags/v%{tag_version}.tar.gz#/milvus-%{tag_version}.tar.gz
+Source0:          https://github.com/milvus-io/milvus-rpm/archive/refs/tags/v%{tag_version}.tar.gz#/milvus-%{tag_version}.tar.gz
 
 %description
 Milvus is an open-source vector database for unstructured data. 
@@ -37,11 +37,11 @@ tar -xf %{SOURCE0} -C %{_builddir}/
 %build
 
 # build install milvus
-cd %{_builddir}/milvus-%{tag_version}
-tar -xf milvus.tar.gz 
+cd %{_builddir}/milvus-rpm-%{tag_version}
+tar -xf milvus-%{tag_version}.tar.gz 
 tar -xf vendor.tar.gz
-mv vendor milvus
-cd %{_builddir}/milvus-%{tag_version}/milvus
+mv vendor milvus-%{tag_version}
+cd %{_builddir}/milvus-rpm-%{tag_version}/milvus-%{tag_version}
 ## remove rpath config
 cmakeRpathFiles=(
     "internal/core/CMakeLists.txt"
@@ -82,18 +82,18 @@ sed -i 's/GO111MODULE=on \$(GO) build/GO111MODULE=on \$(GO) build -mod vendor/g'
 
 sed -i '$d' scripts/cwrapper_rocksdb_build.sh
 
-export MILVUS_FIU_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/1.00.tar.gz'
-export MILVUS_OPENTRACING_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/v1.5.1.tar.gz'
-export MILVUS_PROTOBUF_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/protobuf-cpp-3.9.0.zip'
-export MILVUS_YAMLCPP_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/yaml-cpp-0.6.3.tar.gz'
-export MILVUS_ROCKSDB_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/v6.15.2.tar.gz'
-export MILVUS_ARROW_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/apache-arrow-6.0.1.tar.gz'
+export MILVUS_FIU_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/1.00.tar.gz'
+export MILVUS_OPENTRACING_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/v1.5.1.tar.gz'
+export MILVUS_PROTOBUF_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/protobuf-cpp-3.9.0.zip'
+export MILVUS_YAMLCPP_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/yaml-cpp-0.6.3.tar.gz'
+export MILVUS_ROCKSDB_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/v6.15.2.tar.gz'
+export MILVUS_ARROW_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/apache-arrow-6.0.1.tar.gz'
 
-export ARROW_THRIFT_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/apache_arrow_dep/thrift-0.13.0.tar.gz'
-export ARROW_JEMALLOC_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/apache_arrow_dep/jemalloc-5.2.1.tar.bz2'
-export ARROW_XSIMD_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/apache_arrow_dep/aeec9c872c8b475dedd7781336710f2dd2666cb2.tar.gz'
-export ARROW_UTF8PROC_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/apache_arrow_dep/v2.6.1.tar.gz'
-export ARROW_BOOST_URL='%{_builddir}/milvus-%{tag_version}/download_thirdparty/apache_arrow_dep/boost_1_75_0.tar.gz'
+export ARROW_THRIFT_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/apache_arrow_dep/thrift-0.13.0.tar.gz'
+export ARROW_JEMALLOC_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/apache_arrow_dep/jemalloc-5.2.1.tar.bz2'
+export ARROW_XSIMD_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/apache_arrow_dep/aeec9c872c8b475dedd7781336710f2dd2666cb2.tar.gz'
+export ARROW_UTF8PROC_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/apache_arrow_dep/v2.6.1.tar.gz'
+export ARROW_BOOST_URL='%{_builddir}/milvus-rpm-%{tag_version}/download_thirdparty/apache_arrow_dep/boost_1_75_0.tar.gz'
 
 export LD_LIBRARY_PATH=${PWD}/internal/core/output/lib/
 make %{?_smp_mflags} install -e BUILD_TAGS=v%{tag_version} -e GIT_COMMIT=%{git_commit}
@@ -110,14 +110,13 @@ mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 mkdir -p %{buildroot}%{_mandir}/man1
 mkdir -p %{buildroot}%{_unitdir}
 
-cd %{_builddir}/milvus-%{tag_version}/milvus
+cd %{_builddir}/milvus-rpm-%{tag_version}/milvus-%{tag_version}
 
 # bin
 echo 'export MILVUSCONF=/etc/milvus/configs/' > %{buildroot}%{_bindir}/milvus
 echo 'milvus-server $@' >> %{buildroot}%{_bindir}/milvus
 sed -i -e '1i#!/bin/bash' %{buildroot}%{_bindir}/milvus
 chmod 755 %{buildroot}%{_bindir}/milvus
-#strip bin/milvus
 install -p -m 755 bin/milvus %{buildroot}%{_bindir}/milvus-server
 
 # lib
@@ -137,7 +136,7 @@ install -p -m 755 /usr/lib64/libgfortran.so.5.0.0 %{buildroot}%{_libdir}/milvus/
 install -p -m 644 configs/milvus.yaml %{buildroot}%{_sysconfdir}/milvus/configs/milvus.yaml
 install -p -m 644 configs/advanced/etcd.yaml %{buildroot}%{_sysconfdir}/milvus/configs/advanced/etcd.yaml
 
-cd %{_builddir}/milvus-%{tag_version} 
+cd %{_builddir}/milvus-rpm-%{tag_version} 
 
 #bin
 install -p -m 755 scripts/milvus-dependencies %{buildroot}%{_bindir}/milvus-dependencies
@@ -192,8 +191,8 @@ install -p -m 644 rpm/man/milvus-dependencies.1.gz %{buildroot}%{_mandir}/man1/m
 
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/milvus.conf
 
-%doc milvus-%{tag_version}/milvus/README.md
-%license milvus-%{tag_version}/milvus/LICENSE
+%doc milvus-rpm-%{tag_version}/milvus-%{tag_version}/README.md
+%license milvus-rpm-%{tag_version}/milvus-%{tag_version}/LICENSE
 
 %{_mandir}/man1/milvus.1.gz
 %{_mandir}/man1/milvus-server.1.gz
